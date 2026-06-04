@@ -31,6 +31,13 @@ TEXTS = {
         "jetzt und in der Stunde unseres Todes. Amen."
     ),
     "italian": (
+        "Ave Maria, piena di grazia, il Signore è con te.\n"
+        "Tu sei benedetta fra le donne,\n"
+        "e benedetto è il frutto del tuo seno, Gesù.\n"
+        "Santa Maria, Madre di Dio, prega per noi peccatori,\n"
+        "adesso e nell'ora della nostra morte. Amen."
+    ),
+    "latin": (
         "Ave Maria, gratia plena, Dominus tecum.\n"
         "Benedicta tu in mulieribus,\n"
         "et benedictus fructus ventris tui, Iesus.\n"
@@ -63,6 +70,17 @@ VOICES = {
         "Shelley": "Shelley (German (Germany))",
     },
     "italian": {
+        "Eddy":    "Eddy (Italian (Italy))",
+        "Flo":     "Flo (Italian (Italy))",
+        "Grandma": "Grandma (Italian (Italy))",
+        "Grandpa": "Grandpa (Italian (Italy))",
+        "Reed":    "Reed (Italian (Italy))",
+        "Rocko":   "Rocko (Italian (Italy))",
+        "Sandy":   "Sandy (Italian (Italy))",
+        "Shelley": "Shelley (Italian (Italy))",
+    },
+    "latin": {
+        # No macOS Latin voice — Italian voices render Church Latin most faithfully
         "Eddy":    "Eddy (Italian (Italy))",
         "Flo":     "Flo (Italian (Italy))",
         "Grandma": "Grandma (Italian (Italy))",
@@ -121,18 +139,16 @@ def list_info() -> None:
 # ── Core function ──────────────────────────────────────────────────────────────
 
 def speak(voice_name: str, language: str, rate: int) -> None:
-    # Latin redirects to italian with explanation
+    # Latin has its own text now; note that Italian voices are used
     if language == "latin":
         print(LATIN_NOTE)
-        language = "italian"
 
     voice_str = VOICES[language][voice_name]
     text      = TEXTS[language]
 
     # Header
-    display_lang = "Latin (via Italian voices)" if language == "italian" and "latin" in sys.argv else language.capitalize()
     print(f"\n{'─' * 60}")
-    print(f"  🎙  {voice_name}  ·  {display_lang}  ·  rate {rate}")
+    print(f"  🎙  {voice_name}  ·  {language.capitalize()}  ·  rate {rate}")
     print(f"{'─' * 60}")
 
     # Print the full prayer text
@@ -167,9 +183,10 @@ def build_parser() -> argparse.ArgumentParser:
             "  Ave.py --voice Grandma --language italian\n"
             "  Ave.py --voice Rocko   --language german\n"
             "  Ave.py --language english --rate 80\n"
-            "  Ave.py --all                        # all 24 voice/language combos\n"
+            "  Ave.py --all                        # all 32 voice/language combos\n"
             "  Ave.py --all --language italian     # all 8 Italian voices\n"
-            "  Ave.py --all --voice Grandma        # Grandma in all 3 languages\n\n"
+            "  Ave.py --all --language latin       # all 8 Latin voices\n"
+            "  Ave.py --all --voice Grandma        # Grandma in all 4 languages\n\n"
             f"Voices    : {', '.join(VOICE_NAMES)}\n"
             f"Languages : english/englisch/inglese, german/deutsch/tedesco,\n"
             f"            italian/italiano, latin/latina/lateinisch/latino,\n"
@@ -231,9 +248,6 @@ def main() -> None:
     if args.all:
         voices    = [args.voice]    if args.voice    else VOICE_NAMES
         languages = [args.language] if args.language else LANGUAGE_NAMES
-        # Resolve latin → italian for iteration (speak() also handles it,
-        # but this keeps the count and loop clean)
-        languages = ["italian" if l == "latin" else l for l in languages]
         languages = list(dict.fromkeys(languages))  # deduplicate
 
         total = len(voices) * len(languages)
