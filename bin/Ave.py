@@ -99,6 +99,7 @@ LANGUAGE_ALIASES: dict[str, str] = {
     "latino":   "latin",     # Italian/Spanish spelling
     "latina":   "latin",     # Classical Latin — lingua Latina
     "lingua latina": "latin", # Full classical name — requires quotes on CLI
+    "linqua latina": "latin", # Common misspelling — accepted graciously
 }
 
 LATIN_NOTE = (
@@ -184,13 +185,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--language", "-l",
-        choices=list(LANGUAGE_ALIASES.keys()),
         default=None,
-        type=lambda s: LANGUAGE_ALIASES.get(s.lower(), s.lower()),
+        type=lambda s: LANGUAGE_ALIASES.get(s.lower(), None),
         help=(
             "Language to use. Accepts English/Englisch/Inglese, "
             "German/Deutsch/Tedesco, Italian/Italiano, "
-            "Latin/Lateinisch/Latino (uses Italian voices)."
+            "Latin/Latina/Lateinisch/Latino/\"Lingua Latina\" (uses Italian voices)."
         ),
     )
     parser.add_argument(
@@ -218,6 +218,15 @@ def main() -> None:
         parser.print_help()
         print()
         return
+
+    # Manual language validation — catches unrecognised values cleanly
+    if args.language is None and "--language" in sys.argv or "-l" in sys.argv:
+        # language was supplied but not recognised
+        raw = sys.argv[sys.argv.index("--language") + 1] if "--language" in sys.argv else sys.argv[sys.argv.index("-l") + 1]
+        print(f"\n  ❌  Unrecognised language: '{raw}'")
+        print(f"      Valid choices: {', '.join(LANGUAGE_ALIASES.keys())}")
+        print(f"      Note: 'lingua latina' and 'linqua latina' require quotes.\n")
+        sys.exit(1)
 
     if args.all:
         voices    = [args.voice]    if args.voice    else VOICE_NAMES
