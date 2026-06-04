@@ -97,6 +97,8 @@ LANGUAGE_ALIASES: dict[str, str] = {
     "latin":    "latin",     # handled specially — redirects to italian
     "lateinisch": "latin",   # German spelling
     "latino":   "latin",     # Italian/Spanish spelling
+    "latina":   "latin",     # Classical Latin — lingua Latina
+    "lingua latina": "latin", # Full classical name — requires quotes on CLI
 }
 
 LATIN_NOTE = (
@@ -169,7 +171,8 @@ def build_parser() -> argparse.ArgumentParser:
             "  Ave.py --all --voice Grandma        # Grandma in all 3 languages\n\n"
             f"Voices    : {', '.join(VOICE_NAMES)}\n"
             f"Languages : english/englisch/inglese, german/deutsch/tedesco,\n"
-            f"            italian/italiano, latin/lateinisch/latino\n"
+            f"            italian/italiano, latin/latina/lateinisch/latino,\n"
+            f"            \"lingua latina\" (quotes required)\n"
         ),
     )
     parser.add_argument(
