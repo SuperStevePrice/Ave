@@ -86,7 +86,6 @@ def main() -> None:
 
         if answer != "y":
             print("\n  Installation cancelled. Existing Ave.py unchanged.")
-            print_status()
             sys.exit(0)
 
         # Backup existing version with timestamp

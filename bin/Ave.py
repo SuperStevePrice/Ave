@@ -78,6 +78,32 @@ VOICE_NAMES    = list(next(iter(VOICES.values())).keys())  # same for all langua
 LANGUAGE_NAMES = list(TEXTS.keys())
 DEFAULT_RATE   = 100
 
+# ── Language aliases ───────────────────────────────────────────────────────────
+# Maps any accepted spelling/language name → canonical key
+# Latin redirects to italian with an explanation printed at speak time.
+
+LANGUAGE_ALIASES: dict[str, str] = {
+    # English
+    "english":  "english",
+    "englisch": "english",   # German spelling
+    "inglese":  "english",   # Italian spelling
+    # German
+    "german":   "german",
+    "deutsch":  "german",
+    "tedesco":  "german",    # Italian spelling
+    # Italian / Latin
+    "italian":  "italian",
+    "italiano": "italian",
+    "latin":    "latin",     # handled specially — redirects to italian
+    "lateinisch": "latin",   # German spelling
+    "latino":   "latin",     # Italian/Spanish spelling
+}
+
+LATIN_NOTE = (
+    "  ℹ️   Latin requested: no dedicated Latin voice is available on macOS.\n"
+    "      Using Italian voices, which render Church Latin most faithfully.\n"
+)
+
 # ── Listing ────────────────────────────────────────────────────────────────────
 
 def list_info() -> None:
@@ -92,12 +118,18 @@ def list_info() -> None:
 # ── Core function ──────────────────────────────────────────────────────────────
 
 def speak(voice_name: str, language: str, rate: int) -> None:
+    # Latin redirects to italian with explanation
+    if language == "latin":
+        print(LATIN_NOTE)
+        language = "italian"
+
     voice_str = VOICES[language][voice_name]
     text      = TEXTS[language]
 
     # Header
+    display_lang = "Latin (via Italian voices)" if language == "italian" and "latin" in sys.argv else language.capitalize()
     print(f"\n{'─' * 60}")
-    print(f"  🎙  {voice_name}  ·  {language.capitalize()}  ·  rate {rate}")
+    print(f"  🎙  {voice_name}  ·  {display_lang}  ·  rate {rate}")
     print(f"{'─' * 60}")
 
     # Print the full prayer text
@@ -136,20 +168,27 @@ def build_parser() -> argparse.ArgumentParser:
             "  Ave.py --all --language italian     # all 8 Italian voices\n"
             "  Ave.py --all --voice Grandma        # Grandma in all 3 languages\n\n"
             f"Voices    : {', '.join(VOICE_NAMES)}\n"
-            f"Languages : {', '.join(LANGUAGE_NAMES)}\n"
+            f"Languages : english/englisch/inglese, german/deutsch/tedesco,\n"
+            f"            italian/italiano, latin/lateinisch/latino\n"
         ),
     )
     parser.add_argument(
         "--voice", "-v",
         choices=VOICE_NAMES,
         default=None,
+        type=lambda s: s.capitalize(),
         help=f"Voice to use. Choices: {', '.join(VOICE_NAMES)}",
     )
     parser.add_argument(
         "--language", "-l",
-        choices=LANGUAGE_NAMES,
+        choices=list(LANGUAGE_ALIASES.keys()),
         default=None,
-        help="Language / text to use. Note: Italian voices read the Latin text.",
+        type=lambda s: LANGUAGE_ALIASES.get(s.lower(), s.lower()),
+        help=(
+            "Language to use. Accepts English/Englisch/Inglese, "
+            "German/Deutsch/Tedesco, Italian/Italiano, "
+            "Latin/Lateinisch/Latino (uses Italian voices)."
+        ),
     )
     parser.add_argument(
         "--rate", "-r",
@@ -180,6 +219,10 @@ def main() -> None:
     if args.all:
         voices    = [args.voice]    if args.voice    else VOICE_NAMES
         languages = [args.language] if args.language else LANGUAGE_NAMES
+        # Resolve latin → italian for iteration (speak() also handles it,
+        # but this keeps the count and loop clean)
+        languages = ["italian" if l == "latin" else l for l in languages]
+        languages = list(dict.fromkeys(languages))  # deduplicate
 
         total = len(voices) * len(languages)
         print(f"\nAve Maria — {total} voice{'s' if total != 1 else ''} will speak the prayer.")
